@@ -1,0 +1,235 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "PowerUp - Microservicio Trazabilidad",
+    "description": "Microservicio de Auditoría, Trazabilidad y Análisis de Eficiencia de Pedidos (MongoDB)",
+    "termsOfService": "http://swagger.io/terms/",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://springdoc.org"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8084",
+      "description": "Servidor Local de Trazabilidad"
+    }
+  ],
+  "security": [
+    {
+      "jwtAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Trazabilidad",
+      "description": "Endpoints para la auditoría y consulta de trazabilidad de los pedidos"
+    }
+  ],
+  "paths": {
+    "/api/v1/trazabilidad": {
+      "post": {
+        "tags": [
+          "Trazabilidad"
+        ],
+        "summary": "Registrar un cambio de estado en la trazabilidad de un pedido",
+        "description": "Permite registrar un nuevo evento o cambio de estado de un pedido en la base de datos MongoDB.",
+        "operationId": "registrarCambioEstado",
+        "requestBody": {
+          "description": "Datos del cambio de estado",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrazabilidadRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cambio de estado registrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrazabilidadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos"
+          }
+        }
+      }
+    },
+    "/api/v1/trazabilidad/pedido/{idPedido}": {
+      "get": {
+        "tags": [
+          "Trazabilidad"
+        ],
+        "summary": "Consultar el historial de trazabilidad de un pedido (Solo el Cliente dueño del pedido)",
+        "description": "Permite al cliente visualizar todos los cambios de estado por los que ha pasado su pedido en orden cronológico.",
+        "operationId": "obtenerTrazabilidadPorPedido",
+        "parameters": [
+          {
+            "name": "idPedido",
+            "in": "path",
+            "required": true,
+            "description": "Identificador del pedido a consultar",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historial de trazabilidad obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrazabilidadResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Identificador de pedido inválido"
+          },
+          "403": {
+            "description": "Acceso denegado: solo el cliente dueño puede consultar este pedido"
+          },
+          "404": {
+            "description": "No se encontraron registros para el pedido"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TrazabilidadRequestDto": {
+        "type": "object",
+        "required": [
+          "idCliente",
+          "idPedido",
+          "nuevoEstado"
+        ],
+        "properties": {
+          "idPedido": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del pedido",
+            "example": 1
+          },
+          "idCliente": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del cliente",
+            "example": 100
+          },
+          "correoCliente": {
+            "type": "string",
+            "description": "Correo electrónico del cliente",
+            "example": "cliente@plazoleta.com"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Fecha y hora del cambio de estado",
+            "example": "2026-10-02T16:00:00"
+          },
+          "estadoAnterior": {
+            "type": "string",
+            "description": "Estado previo del pedido",
+            "example": "PENDIENTE"
+          },
+          "nuevoEstado": {
+            "type": "string",
+            "description": "Nuevo estado del pedido",
+            "example": "EN_PREPARACION"
+          },
+          "idEmpleado": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del empleado asignado",
+            "example": 50
+          },
+          "correoEmpleado": {
+            "type": "string",
+            "description": "Correo del empleado",
+            "example": "empleado@restaurante.com"
+          }
+        },
+        "description": "DTO para registrar un cambio de estado en la trazabilidad del pedido"
+      },
+      "TrazabilidadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del registro de auditoría en MongoDB",
+            "example": "66fde01b2a9f1a23c4d5e6f7"
+          },
+          "idPedido": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del pedido",
+            "example": 1
+          },
+          "idCliente": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del cliente",
+            "example": 100
+          },
+          "correoCliente": {
+            "type": "string",
+            "description": "Correo del cliente",
+            "example": "cliente@plazoleta.com"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Fecha y hora del cambio de estado",
+            "example": "2026-10-02T16:00:00"
+          },
+          "estadoAnterior": {
+            "type": "string",
+            "description": "Estado previo del pedido",
+            "example": "PENDIENTE"
+          },
+          "nuevoEstado": {
+            "type": "string",
+            "description": "Nuevo estado del pedido",
+            "example": "EN_PREPARACION"
+          },
+          "idEmpleado": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del empleado asignado",
+            "example": 50
+          },
+          "correoEmpleado": {
+            "type": "string",
+            "description": "Correo del empleado",
+            "example": "empleado@restaurante.com"
+          }
+        },
+        "description": "DTO de respuesta con el registro de trazabilidad de un pedido"
+      }
+    },
+    "securitySchemes": {
+      "jwtAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
