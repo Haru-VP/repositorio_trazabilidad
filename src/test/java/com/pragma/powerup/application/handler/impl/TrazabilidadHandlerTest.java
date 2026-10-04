@@ -33,6 +33,9 @@ class TrazabilidadHandlerTest {
     @Mock
     private ITrazabilidadResponseMapper trazabilidadResponseMapper;
 
+    @Mock
+    private com.pragma.powerup.application.mapper.IEficienciaResponseMapper eficienciaResponseMapper;
+
     @InjectMocks
     private TrazabilidadHandler trazabilidadHandler;
 
@@ -78,5 +81,52 @@ class TrazabilidadHandlerTest {
         assertEquals(1, resultado.size());
         verify(trazabilidadServicePort, times(1)).obtenerTrazabilidadPorPedido(idPedido);
         verify(trazabilidadResponseMapper, times(1)).toResponseDtoList(Collections.singletonList(model));
+    }
+
+    @Test
+    void obtenerEficienciaPedidos_exitoso() {
+        com.pragma.powerup.domain.model.PedidoEficienciaModel model = new com.pragma.powerup.domain.model.PedidoEficienciaModel();
+        com.pragma.powerup.application.dto.response.PedidoEficienciaResponseDto dto = new com.pragma.powerup.application.dto.response.PedidoEficienciaResponseDto();
+
+        when(trazabilidadServicePort.obtenerEficienciaPedidos()).thenReturn(Collections.singletonList(model));
+        when(eficienciaResponseMapper.toPedidoDtoList(Collections.singletonList(model))).thenReturn(Collections.singletonList(dto));
+
+        List<com.pragma.powerup.application.dto.response.PedidoEficienciaResponseDto> resultado = trazabilidadHandler.obtenerEficienciaPedidos();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        verify(trazabilidadServicePort).obtenerEficienciaPedidos();
+        verify(eficienciaResponseMapper).toPedidoDtoList(Collections.singletonList(model));
+    }
+
+    @Test
+    void obtenerRankingEficienciaEmpleados_exitoso() {
+        com.pragma.powerup.domain.model.EmpleadoRankingModel model = new com.pragma.powerup.domain.model.EmpleadoRankingModel();
+        com.pragma.powerup.application.dto.response.EmpleadoRankingResponseDto dto = new com.pragma.powerup.application.dto.response.EmpleadoRankingResponseDto();
+
+        when(trazabilidadServicePort.obtenerRankingEficienciaEmpleados()).thenReturn(Collections.singletonList(model));
+        when(eficienciaResponseMapper.toRankingDtoList(Collections.singletonList(model))).thenReturn(Collections.singletonList(dto));
+
+        List<com.pragma.powerup.application.dto.response.EmpleadoRankingResponseDto> resultado = trazabilidadHandler.obtenerRankingEficienciaEmpleados();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        verify(trazabilidadServicePort).obtenerRankingEficienciaEmpleados();
+        verify(eficienciaResponseMapper).toRankingDtoList(Collections.singletonList(model));
+    }
+
+    @Test
+    void obtenerResumenEficiencia_exitoso() {
+        com.pragma.powerup.domain.model.EficienciaResumenModel model = new com.pragma.powerup.domain.model.EficienciaResumenModel();
+        com.pragma.powerup.application.dto.response.EficienciaResumenResponseDto dto = new com.pragma.powerup.application.dto.response.EficienciaResumenResponseDto();
+
+        when(trazabilidadServicePort.obtenerResumenEficiencia()).thenReturn(model);
+        when(eficienciaResponseMapper.toResumenDto(model)).thenReturn(dto);
+
+        com.pragma.powerup.application.dto.response.EficienciaResumenResponseDto resultado = trazabilidadHandler.obtenerResumenEficiencia();
+
+        assertNotNull(resultado);
+        verify(trazabilidadServicePort).obtenerResumenEficiencia();
+        verify(eficienciaResponseMapper).toResumenDto(model);
     }
 }

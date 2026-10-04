@@ -27,4 +27,10 @@ public class TrazabilidadMongoAdapter implements ITrazabilidadPersistencePort {
         List<TrazabilidadDocument> documents = trazabilidadMongoRepository.findByIdPedidoOrderByFechaAsc(idPedido);
         return trazabilidadDocumentMapper.toModelList(documents);
     }
+
+    @Override
+    public List<TrazabilidadModel> obtenerTodosLosRegistros() {
+        List<TrazabilidadDocument> documents = trazabilidadMongoRepository.findAllByOrderByFechaAsc();
+        return trazabilidadDocumentMapper.toModelList(documents);
+    }
 }

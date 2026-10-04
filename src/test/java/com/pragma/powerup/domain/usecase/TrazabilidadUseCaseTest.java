@@ -162,4 +162,116 @@ class TrazabilidadUseCaseTest {
                 trazabilidadUseCase.obtenerTrazabilidadPorPedido(idPedido)
         );
     }
+
+    @Test
+    void obtenerEficienciaPedidos_exitoso() {
+        LocalDateTime t0 = LocalDateTime.of(2026, 10, 1, 12, 0, 0);
+        LocalDateTime t1 = LocalDateTime.of(2026, 10, 1, 12, 15, 30); // 15m 30s = 930s
+
+        TrazabilidadModel logInicio = new TrazabilidadModel("1", 10L, 100L, "c1@p.com", t0, null, "PENDIENTE", null, null);
+        TrazabilidadModel logPrep = new TrazabilidadModel("2", 10L, 100L, "c1@p.com", t0.plusMinutes(5), "PENDIENTE", "EN_PREPARACION", 50L, "emp1@p.com");
+        TrazabilidadModel logEntrega = new TrazabilidadModel("3", 10L, 100L, "c1@p.com", t1, "LISTO", "ENTREGADO", 50L, "emp1@p.com");
+
+        when(authenticatedUserPort.obtenerIdUsuarioAutenticado()).thenReturn(1L);
+        when(authenticatedUserPort.obtenerRolUsuarioAutenticado()).thenReturn("PROPIETARIO");
+        when(trazabilidadPersistencePort.obtenerTodosLosRegistros()).thenReturn(Arrays.asList(logInicio, logPrep, logEntrega));
+
+        List<com.pragma.powerup.domain.model.PedidoEficienciaModel> resultado = trazabilidadUseCase.obtenerEficienciaPedidos();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        com.pragma.powerup.domain.model.PedidoEficienciaModel p = resultado.get(0);
+        assertEquals(10L, p.getIdPedido());
+        assertEquals(100L, p.getIdCliente());
+        assertEquals(50L, p.getIdEmpleado());
+        assertEquals(930L, p.getDuracionSegundos());
+        assertEquals(15.5, p.getDuracionMinutos());
+        assertEquals("15m 30s", p.getDuracionFormateada());
+        assertEquals("ENTREGADO", p.getEstadoFinal());
+    }
+
+    @Test
+    void obtenerEficienciaPedidos_vacio_sinRegistros() {
+        when(authenticatedUserPort.obtenerIdUsuarioAutenticado()).thenReturn(1L);
+        when(authenticatedUserPort.obtenerRolUsuarioAutenticado()).thenReturn("PROPIETARIO");
+        when(trazabilidadPersistencePort.obtenerTodosLosRegistros()).thenReturn(Collections.emptyList());
+
+        List<com.pragma.powerup.domain.model.PedidoEficienciaModel> resultado = trazabilidadUseCase.obtenerEficienciaPedidos();
+
+        assertNotNull(resultado);
+        assertEquals(0, resultado.size());
+    }
+
+    @Test
+    void obtenerEficienciaPedidos_falla_usuarioNoAutenticado() {
+        when(authenticatedUserPort.obtenerIdUsuarioAutenticado()).thenReturn(null);
+
+        assertThrows(UsuarioNoAutorizadoException.class, () ->
+                trazabilidadUseCase.obtenerEficienciaPedidos()
+        );
+    }
+
+    @Test
+    void obtenerEficienciaPedidos_falla_rolNoAutorizado() {
+        when(authenticatedUserPort.obtenerIdUsuarioAutenticado()).thenReturn(2L);
+        when(authenticatedUserPort.obtenerRolUsuarioAutenticado()).thenReturn("CLIENTE");
+
+        assertThrows(UsuarioNoAutorizadoException.class, () ->
+                trazabilidadUseCase.obtenerEficienciaPedidos()
+        );
+    }
+
+    @Test
+    void obtenerRankingEficienciaEmpleados_exitoso() {
+        LocalDateTime t0 = LocalDateTime.of(2026, 10, 1, 10, 0, 0);
+
+        // Pedido 1: Empleado 50, tarda 10 minutos (600s)
+        TrazabilidadModel p1Inicio = new TrazabilidadModel("1", 1L, 100L, "c1@p.com", t0, null, "PENDIENTE", null, null);
+        TrazabilidadModel p1Fin = new TrazabilidadModel("2", 1L, 100L, "c1@p.com", t0.plusMinutes(10), "LISTO", "ENTREGADO", 50L, "e50@p.com");
+
+        // Pedido 2: Empleado 60, tarda 5 minutos (300s) -> Mejor ranking!
+        TrazabilidadModel p2Inicio = new TrazabilidadModel("3", 2L, 101L, "c2@p.com", t0, null, "PENDIENTE", null, null);
+        TrazabilidadModel p2Fin = new TrazabilidadModel("4", 2L, 101L, "c2@p.com", t0.plusMinutes(5), "LISTO", "ENTREGADO", 60L, "e60@p.com");
+
+        // Pedido 3: Empleado 50, tarda 20 minutos (1200s) -> Media empleado 50: (600 + 1200)/2 = 900s (15 min)
+        TrazabilidadModel p3Inicio = new TrazabilidadModel("5", 3L, 102L, "c3@p.com", t0, null, "PENDIENTE", null, null);
+        TrazabilidadModel p3Fin = new TrazabilidadModel("6", 3L, 102L, "c3@p.com", t0.plusMinutes(20), "LISTO", "ENTREGADO", 50L, "e50@p.com");
+
+        when(authenticatedUserPort.obtenerIdUsuarioAutenticado()).thenReturn(1L);
+        when(authenticatedUserPort.obtenerRolUsuarioAutenticado()).thenReturn("ROLE_PROPIETARIO");
+        when(trazabilidadPersistencePort.obtenerTodosLosRegistros())
+                .thenReturn(Arrays.asList(p1Inicio, p1Fin, p2Inicio, p2Fin, p3Inicio, p3Fin));
+
+        List<com.pragma.powerup.domain.model.EmpleadoRankingModel> ranking = trazabilidadUseCase.obtenerRankingEficienciaEmpleados();
+
+        assertNotNull(ranking);
+        assertEquals(2, ranking.size());
+
+        // Rank 1: Empleado 60 (300s = 5m)
+        assertEquals(1, ranking.get(0).getRanking());
+        assertEquals(60L, ranking.get(0).getIdEmpleado());
+        assertEquals(1, ranking.get(0).getCantidadPedidos());
+        assertEquals(300.0, ranking.get(0).getTiempoMedioSegundos());
+        assertEquals(5.0, ranking.get(0).getTiempoMedioMinutos());
+
+        // Rank 2: Empleado 50 (900s = 15m)
+        assertEquals(2, ranking.get(1).getRanking());
+        assertEquals(50L, ranking.get(1).getIdEmpleado());
+        assertEquals(2, ranking.get(1).getCantidadPedidos());
+        assertEquals(900.0, ranking.get(1).getTiempoMedioSegundos());
+        assertEquals(15.0, ranking.get(1).getTiempoMedioMinutos());
+    }
+
+    @Test
+    void obtenerResumenEficiencia_exitoso() {
+        when(authenticatedUserPort.obtenerIdUsuarioAutenticado()).thenReturn(1L);
+        when(authenticatedUserPort.obtenerRolUsuarioAutenticado()).thenReturn("ADMINISTRADOR");
+        when(trazabilidadPersistencePort.obtenerTodosLosRegistros()).thenReturn(Collections.emptyList());
+
+        com.pragma.powerup.domain.model.EficienciaResumenModel resumen = trazabilidadUseCase.obtenerResumenEficiencia();
+
+        assertNotNull(resumen);
+        assertNotNull(resumen.getPedidos());
+        assertNotNull(resumen.getRankingEmpleados());
+    }
 }

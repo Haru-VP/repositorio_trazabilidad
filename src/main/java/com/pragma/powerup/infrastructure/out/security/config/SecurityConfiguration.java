@@ -36,7 +36,8 @@ public class SecurityConfiguration {
                         "/webjars/**"
                 ).permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v1/trazabilidad", "/api/v1/trazabilidad/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/v1/trazabilidad/pedido/**", "/api/v1/trazabilidad/**").hasAnyRole("CLIENTE", "PROPIETARIO", "EMPLEADO")
+                .antMatchers(HttpMethod.GET, "/api/v1/trazabilidad/eficiencia", "/api/v1/trazabilidad/eficiencia/**").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
+                .antMatchers(HttpMethod.GET, "/api/v1/trazabilidad/pedido/**", "/api/v1/trazabilidad/*").hasAnyRole("CLIENTE", "PROPIETARIO", "EMPLEADO", "ADMINISTRADOR")
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

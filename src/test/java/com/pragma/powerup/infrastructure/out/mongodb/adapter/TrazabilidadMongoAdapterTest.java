@@ -72,4 +72,22 @@ class TrazabilidadMongoAdapterTest {
         verify(trazabilidadMongoRepository, times(1)).findByIdPedidoOrderByFechaAsc(idPedido);
         verify(trazabilidadDocumentMapper, times(1)).toModelList(Collections.singletonList(document));
     }
+
+    @Test
+    void obtenerTodosLosRegistros_exitoso() {
+        TrazabilidadDocument document = new TrazabilidadDocument();
+        TrazabilidadModel model = new TrazabilidadModel();
+
+        when(trazabilidadMongoRepository.findAllByOrderByFechaAsc())
+                .thenReturn(Collections.singletonList(document));
+        when(trazabilidadDocumentMapper.toModelList(Collections.singletonList(document)))
+                .thenReturn(Collections.singletonList(model));
+
+        List<TrazabilidadModel> resultado = trazabilidadMongoAdapter.obtenerTodosLosRegistros();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        verify(trazabilidadMongoRepository, times(1)).findAllByOrderByFechaAsc();
+        verify(trazabilidadDocumentMapper, times(1)).toModelList(Collections.singletonList(document));
+    }
 }

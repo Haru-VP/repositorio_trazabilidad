@@ -66,4 +66,45 @@ class TrazabilidadRestControllerTest {
         assertEquals(1, response.getBody().size());
         verify(trazabilidadHandler, times(1)).obtenerTrazabilidadPorPedido(idPedido);
     }
+
+    @Test
+    void obtenerEficienciaPedidos_retornaOk() {
+        com.pragma.powerup.application.dto.response.PedidoEficienciaResponseDto dto = new com.pragma.powerup.application.dto.response.PedidoEficienciaResponseDto();
+        when(trazabilidadHandler.obtenerEficienciaPedidos()).thenReturn(Collections.singletonList(dto));
+
+        ResponseEntity<List<com.pragma.powerup.application.dto.response.PedidoEficienciaResponseDto>> response =
+                trazabilidadRestController.obtenerEficienciaPedidos();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        verify(trazabilidadHandler, times(1)).obtenerEficienciaPedidos();
+    }
+
+    @Test
+    void obtenerRankingEficienciaEmpleados_retornaOk() {
+        com.pragma.powerup.application.dto.response.EmpleadoRankingResponseDto dto = new com.pragma.powerup.application.dto.response.EmpleadoRankingResponseDto();
+        when(trazabilidadHandler.obtenerRankingEficienciaEmpleados()).thenReturn(Collections.singletonList(dto));
+
+        ResponseEntity<List<com.pragma.powerup.application.dto.response.EmpleadoRankingResponseDto>> response =
+                trazabilidadRestController.obtenerRankingEficienciaEmpleados();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        verify(trazabilidadHandler, times(1)).obtenerRankingEficienciaEmpleados();
+    }
+
+    @Test
+    void obtenerResumenEficiencia_retornaOk() {
+        com.pragma.powerup.application.dto.response.EficienciaResumenResponseDto dto = new com.pragma.powerup.application.dto.response.EficienciaResumenResponseDto();
+        when(trazabilidadHandler.obtenerResumenEficiencia()).thenReturn(dto);
+
+        ResponseEntity<com.pragma.powerup.application.dto.response.EficienciaResumenResponseDto> response =
+                trazabilidadRestController.obtenerResumenEficiencia();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(trazabilidadHandler, times(1)).obtenerResumenEficiencia();
+    }
 }

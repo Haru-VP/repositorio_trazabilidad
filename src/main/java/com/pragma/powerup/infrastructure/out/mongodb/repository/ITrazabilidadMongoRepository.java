@@ -8,4 +8,6 @@ import java.util.List;
 public interface ITrazabilidadMongoRepository extends MongoRepository<TrazabilidadDocument, String> {
 
     List<TrazabilidadDocument> findByIdPedidoOrderByFechaAsc(Long idPedido);
+
+    List<TrazabilidadDocument> findAllByOrderByFechaAsc();
 }

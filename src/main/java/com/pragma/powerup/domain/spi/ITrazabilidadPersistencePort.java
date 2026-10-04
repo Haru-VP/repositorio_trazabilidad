@@ -9,4 +9,6 @@ public interface ITrazabilidadPersistencePort {
     TrazabilidadModel guardarTrazabilidad(TrazabilidadModel model);
 
     List<TrazabilidadModel> obtenerTrazabilidadPorPedido(Long idPedido);
+
+    List<TrazabilidadModel> obtenerTodosLosRegistros();
 }
